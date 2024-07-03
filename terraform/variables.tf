@@ -14,3 +14,8 @@ variable "cluster_name" {
   type        = string
   default     = "gke-cluster"
 }
+
+variable "service_account" {
+  description = "The service account email for the nodes"
+  type        = string
+}
