@@ -5,12 +5,10 @@ provider "google" {
 
 resource "google_container_cluster" "primary" {
   name     = var.cluster_name
-  location = var.region
+  location = var.zone
 
   remove_default_node_pool = true
   initial_node_count       = 1
-
-
 
   node_config {
     machine_type = "e2-medium"
@@ -39,6 +37,7 @@ resource "google_container_cluster" "primary" {
     }
 
 
+
     gce_persistent_disk_csi_driver_config {
       enabled = true
     }
@@ -51,29 +50,47 @@ resource "google_container_cluster" "primary" {
     channel = "REGULAR"
   }
 
-  node_pool {
-    name       = "default-pool"
-    node_count = 2
-    node_config {
-      machine_type = "e2-medium"
-      disk_type    = "pd-balanced"
-      disk_size_gb = 10
-      oauth_scopes = [
-        "https://www.googleapis.com/auth/cloud-platform",
-      ]
-      service_account = var.service_account
-      metadata = {
-        disable-legacy-endpoints = "true"
-      }
-    }
+  workload_identity_config {
+    identity_namespace = "${var.project_id}.svc.id.goog"
   }
 
+  enable_shielded_nodes = true
+
+
+
+  # Optional: Network configuration
   network    = "projects/${var.project_id}/global/networks/default"
   subnetwork = "projects/${var.project_id}/regions/${var.region}/subnetworks/default"
 
-  shielded_nodes {
-    enabled = true
+  # Optional: Kubernetes Alpha features
+  enable_kubernetes_alpha = false
+
+  # Optional: Security posture
+  security_posture {
+    mode = "STANDARD"
   }
+}
+
+resource "google_container_node_pool" "primary_nodes" {
+  cluster    = google_container_cluster.primary.name
+  location   = google_container_cluster.primary.location
+  name       = "primary-node-pool"
+  node_count = 2
+
+  node_config {
+    machine_type = "e2-medium"
+    disk_type    = "pd-balanced"
+    disk_size_gb = 10
+    oauth_scopes = [
+      "https://www.googleapis.com/auth/cloud-platform",
+    ]
+    service_account = var.service_account
+  }
+}
+
+resource "local_file" "kubeconfig" {
+  content  = google_container_cluster.primary.kubeconfig_raw
+  filename = "./kubeconfig"
 }
 
 output "kubeconfig_file_path" {
