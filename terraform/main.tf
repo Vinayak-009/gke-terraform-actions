@@ -3,9 +3,20 @@ provider "google" {
   region  = var.region
 }
 
+# Data source to check if the cluster already exists
+data "google_container_cluster" "existing_cluster" {
+  name     = "kube-cluster"
+  location = "us-central1-c"
+
+  depends_on = [google_container_cluster.primary]  # Ensure primary cluster is created first
+}
+
+# Conditionally create the cluster based on its existence
 resource "google_container_cluster" "primary" {
-  name     = var.cluster_name
-  location = var.zone
+  count = length(data.google_container_cluster.existing_cluster.locations) > 0 ? 0 : 1
+
+  name     = "kube-cluster"
+  location = "us-central1-c"
 
   remove_default_node_pool = true
   initial_node_count       = 1
@@ -30,14 +41,16 @@ resource "google_container_cluster" "primary" {
     channel = "REGULAR"
   }
 
-  # Optional: Network configuration
   network    = "projects/${var.project_id}/global/networks/default"
   subnetwork = "projects/${var.project_id}/regions/${var.region}/subnetworks/default"
 }
 
+# Node pool configuration (if needed)
 resource "google_container_node_pool" "primary_nodes" {
-  cluster    = google_container_cluster.primary.name
-  location   = google_container_cluster.primary.location
+  count = length(data.google_container_cluster.existing_cluster.locations) > 0 ? 0 : 1
+
+  cluster    = google_container_cluster.primary[count.index].name
+  location   = google_container_cluster.primary[count.index].location
   name       = "primary-node-pool"
   node_count = 2
 
@@ -52,4 +65,7 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
-
+# Output for kubeconfig file path (if needed)
+output "kubeconfig_file_path" {
+  value = google_container_cluster.primary[count.index].kubeconfig.0.output_content
+}
