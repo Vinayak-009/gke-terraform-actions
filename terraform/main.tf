@@ -68,10 +68,7 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
-resource "local_file" "kubeconfig" {
-  content  = google_container_cluster.primary.kubeconfig_raw
-  filename = "./kubeconfig"
-}
+
 
 output "kubeconfig_file_path" {
   value = google_container_cluster.primary.kubeconfig.0.output_content
