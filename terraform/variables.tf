@@ -9,6 +9,12 @@ variable "region" {
   default     = "us-central1"
 }
 
+variable "zone" {
+  description = "The GCP zone"
+  type        = string
+  default     = "us-central1-c"
+}
+
 variable "cluster_name" {
   description = "kube-cluster"
   type        = string
