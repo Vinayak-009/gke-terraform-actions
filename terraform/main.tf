@@ -74,5 +74,5 @@ resource "local_file" "kubeconfig" {
 }
 
 output "kubeconfig_file_path" {
-  value = local_file.kubeconfig.filename
+  value = google_container_cluster.primary.kubeconfig.0.output_content
 }
