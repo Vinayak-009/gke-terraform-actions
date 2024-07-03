@@ -13,11 +13,15 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v2
 
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
     - name: Set up Cloud SDK
       uses: google-github-actions/setup-gcloud@v1
       with:
         version: 'latest'
-        service_account_key: ${{ secrets.GCP_SA_KEY }}
         project_id: ${{ secrets.GCP_PROJECT }}
 
     - name: Initialize Terraform
@@ -32,7 +36,7 @@ jobs:
       run: |
         echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > key.json
         gcloud auth activate-service-account --key-file=key.json
-        gcloud container clusters get-credentials ${CLUSTER_NAME} --zone ${ZONE}
+        gcloud container clusters get-credentials ${{ secrets.GCP_PROJECT }} --zone us-central1-a
 
     - name: Deploy application
       run: |
