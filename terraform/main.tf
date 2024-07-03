@@ -52,11 +52,4 @@ resource "google_container_node_pool" "primary_nodes" {
   }
 }
 
-data "google_container_cluster" "cluster" {
-  name     = google_container_cluster.primary.name
-  location = google_container_cluster.primary.location
-}
 
-output "kubeconfig_file_path" {
-  value = data.google_container_cluster.cluster.kubeconfig.0.output_content
-}
