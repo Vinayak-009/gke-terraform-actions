@@ -23,25 +23,11 @@ resource "google_container_cluster" "primary" {
     }
   }
 
-  ip_allocation_policy {
-    use_ip_aliases = true
-  }
-
-  master_authorized_networks_config {
-    cidr_blocks = []
-  }
-
-  addons_config {
-    http_load_balancing {
-      disabled = false
-    }
 
 
 
-    gce_persistent_disk_csi_driver_config {
-      enabled = true
-    }
-  }
+
+
 
   logging_service    = "logging.googleapis.com/kubernetes"
   monitoring_service = "monitoring.googleapis.com/kubernetes"
@@ -50,13 +36,11 @@ resource "google_container_cluster" "primary" {
     channel = "REGULAR"
   }
 
-  workload_identity_config {
-    identity_namespace = "${var.project_id}.svc.id.goog"
-  }
+  
 
-  enable_shielded_nodes = true
+  
 
-
+  
 
   # Optional: Network configuration
   network    = "projects/${var.project_id}/global/networks/default"
