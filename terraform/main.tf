@@ -46,13 +46,9 @@ resource "google_container_cluster" "primary" {
   network    = "projects/${var.project_id}/global/networks/default"
   subnetwork = "projects/${var.project_id}/regions/${var.region}/subnetworks/default"
 
-  # Optional: Kubernetes Alpha features
-  enable_kubernetes_alpha = false
 
-  # Optional: Security posture
-  security_posture {
-    mode = "STANDARD"
-  }
+
+
 }
 
 resource "google_container_node_pool" "primary_nodes" {
