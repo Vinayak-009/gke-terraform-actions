@@ -3,15 +3,7 @@ provider "google" {
   region  = var.region
 }
 
-# Data source to check if the cluster already exists
-data "google_container_cluster" "existing_cluster" {
-  name     = "kube-cluster"
-  location = "us-central1-c"
-}
 
-# Conditionally create the cluster based on its existence
-resource "google_container_cluster" "primary" {
-  count = length(data.google_container_cluster.existing_cluster.location) > 0 ? 0 : 1
 
   name     = "kube-cluster"
   location = "us-central1-c"
