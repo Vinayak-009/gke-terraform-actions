@@ -3,59 +3,80 @@ provider "google" {
   region  = var.region
 }
 
+module "gke" {
+  source                     = "terraform-google-modules/kubernetes-engine/google"
+  version                    = "4.1.0"
+  project_id                 = var.project_id
+  region                     = var.region
+  zones                      = var.zones
+  name                       = var.name
+  network                    = "default"
+  subnetwork                 = "default"
+  ip_range_pods              = ""
+  ip_range_services          = ""
+  http_load_balancing        = false
+  horizontal_pod_autoscaling = true
+  kubernetes_dashboard       = true
+  network_policy             = true
 
+  node_pools = [
+    {
+      name               = "default-node-pool"
+      machine_type       = var.machine_type
+      min_count          = var.min_count
+      max_count          = var.max_count
+      disk_size_gb       = var.disk_size_gb
+      disk_type          = "pd-balanced"
+      image_type         = "COS"
+      auto_repair        = true
+      auto_upgrade       = true
+      service_account    = var.service_account
+      preemptible        = false
+      initial_node_count = var.initial_node_count
+    },
+  ]
 
-  name     = "kube-cluster"
-  location = "us-central1-c"
+  node_pools_oauth_scopes = {
+    all = []
 
-  remove_default_node_pool = true
-  initial_node_count       = 1
-
-  node_config {
-    machine_type = "e2-medium"
-    disk_type    = "pd-balanced"
-    disk_size_gb = 10
-    oauth_scopes = [
+    "default-node-pool" = [
       "https://www.googleapis.com/auth/cloud-platform",
     ]
-    service_account = var.service_account
-    metadata = {
-      disable-legacy-endpoints = "true"
+  }
+
+  node_pools_labels = {
+    all = {}
+
+    "default-node-pool" = {
+      default-node-pool = true
     }
   }
 
-  logging_service    = "logging.googleapis.com/kubernetes"
-  monitoring_service = "monitoring.googleapis.com/kubernetes"
+  node_pools_metadata = {
+    all = {}
 
-  release_channel {
-    channel = "REGULAR"
+    "default-node-pool" = {
+      node-pool-metadata-custom-value = "my-node-pool"
+    }
   }
 
-  network    = "projects/${var.project_id}/global/networks/default"
-  subnetwork = "projects/${var.project_id}/regions/${var.region}/subnetworks/default"
-}
+  node_pools_taints = {
+    all = []
 
-# Node pool configuration (if needed)
-resource "google_container_node_pool" "primary_nodes" {
-  count = length(data.google_container_cluster.existing_cluster.location) > 0 ? 0 : 1
-
-  cluster    = "kube-cluster"
-  location   = "us-central1-c"
-  name       = "primary-node-pool"
-  node_count = 2
-
-  node_config {
-    machine_type = "e2-medium"
-    disk_type    = "pd-balanced"
-    disk_size_gb = 10
-    oauth_scopes = [
-      "https://www.googleapis.com/auth/cloud-platform",
+    "default-node-pool" = [
+      {
+        key    = "default-node-pool"
+        value  = "true"
+        effect = "PREFER_NO_SCHEDULE"
+      },
     ]
-    service_account = var.service_account
   }
-}
 
-# Output for kubeconfig file path (if needed)
-output "kubeconfig_file_path" {
-  value = google_container_cluster.primary[0].endpoint
+  node_pools_tags = {
+    all = []
+
+    "default-node-pool" = [
+      "default-node-pool",
+    ]
+  }
 }
