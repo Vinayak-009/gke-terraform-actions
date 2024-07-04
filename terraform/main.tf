@@ -11,7 +11,7 @@ data "google_container_cluster" "existing_cluster" {
 
 # Conditionally create the cluster based on its existence
 resource "google_container_cluster" "primary" {
-  count = length(data.google_container_cluster.existing_cluster.locations) > 0 ? 0 : 1
+  count = length(data.google_container_cluster.existing_cluster.location) > 0 ? 0 : 1
 
   name     = "kube-cluster"
   location = "us-central1-c"
@@ -45,7 +45,7 @@ resource "google_container_cluster" "primary" {
 
 # Node pool configuration (if needed)
 resource "google_container_node_pool" "primary_nodes" {
-  count = length(data.google_container_cluster.existing_cluster.locations) > 0 ? 0 : 1
+  count = length(data.google_container_cluster.existing_cluster.location) > 0 ? 0 : 1
 
   cluster    = "kube-cluster"
   location   = "us-central1-c"
