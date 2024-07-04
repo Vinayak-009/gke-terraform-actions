@@ -24,22 +24,50 @@ jobs:
         version: 'latest'
         project_id: ${{ secrets.GCP_PROJECT }}
 
+    - name: Check if GKE Cluster Exists
+      id: check-cluster
+      run: |
+        CLUSTER_NAME="kube-cluster"
+        ZONE="us-central1-c"
+        if gcloud container clusters describe $CLUSTER_NAME --zone $ZONE > /dev/null 2>&1; then
+          echo "CLUSTER_EXISTS=true" >> $GITHUB_ENV
+        else
+          echo "CLUSTER_EXISTS=false" >> $GITHUB_ENV
+        fi
+
     - name: Initialize Terraform
       run: terraform init
       working-directory: terraform/
 
-    - name: Apply Terraform
+    - name: Apply Terraform (Cluster Creation)
+      if: env.CLUSTER_EXISTS == 'false'
       run: terraform apply -auto-approve
       working-directory: terraform/
 
-    - name: Set up kubeconfig
+    - name: Get Cluster Credentials
+      if: env.CLUSTER_EXISTS == 'true'
       run: |
-        gcloud container clusters get-credentials kube-cluster --zone us-central1-c --project ${{ secrets.GCP_PROJECT }}
+        gcloud container clusters get-credentials kube-cluster --zone us-central1-c
+        echo "export KUBECONFIG=${{ github.workspace }}/kubeconfig" >> $GITHUB_ENV
+
+    - name: Export KUBECONFIG Path
+      if: env.CLUSTER_EXISTS == 'false'
+      run: echo "export KUBECONFIG=${{ github.workspace }}/kubeconfig" >> $GITHUB_ENV
+
+    - name: Configure Kubeconfig for Terraform
+      if: env.CLUSTER_EXISTS == 'false'
+      run: |
+        terraform output -raw kubeconfig > ${{ github.workspace }}/kubeconfig
+      working-directory: terraform/
 
     - name: Deploy application
       run: |
         kubectl apply -f k8s/pre-ingress.yaml
         kubectl apply -f k8s/hpa.yaml
+      env:
+        KUBECONFIG: ${{ env.KUBECONFIG }}
 
     - name: Verify deployment
       run: kubectl get pods
+      env:
+        KUBECONFIG: ${{ env.KUBECONFIG }}
