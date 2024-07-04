@@ -7,8 +7,6 @@ provider "google" {
 data "google_container_cluster" "existing_cluster" {
   name     = "kube-cluster"
   location = "us-central1-c"
-
-  depends_on = [google_container_cluster.primary]  # Ensure primary cluster is created first
 }
 
 # Conditionally create the cluster based on its existence
@@ -49,8 +47,8 @@ resource "google_container_cluster" "primary" {
 resource "google_container_node_pool" "primary_nodes" {
   count = length(data.google_container_cluster.existing_cluster.locations) > 0 ? 0 : 1
 
-  cluster    = google_container_cluster.primary[count.index].name
-  location   = google_container_cluster.primary[count.index].location
+  cluster    = "kube-cluster"
+  location   = "us-central1-c"
   name       = "primary-node-pool"
   node_count = 2
 
@@ -67,5 +65,5 @@ resource "google_container_node_pool" "primary_nodes" {
 
 # Output for kubeconfig file path (if needed)
 output "kubeconfig_file_path" {
-  value = google_container_cluster.primary[count.index].kubeconfig.0.output_content
+  value = google_container_cluster.primary[0].endpoint
 }
