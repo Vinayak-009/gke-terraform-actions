@@ -34,9 +34,7 @@ jobs:
 
     - name: Set up kubeconfig
       run: |
-        export KUBECONFIG=$(terraform output -raw kubeconfig_file_path)
-        gcloud auth activate-service-account --key-file=key.json
-        gcloud container clusters get-credentials ${{ secrets.GCP_PROJECT }} --zone us-central1-a
+        gcloud container clusters get-credentials kube-cluster --zone us-central1-c --project ${{ secrets.GCP_PROJECT }}
 
     - name: Deploy application
       run: |
