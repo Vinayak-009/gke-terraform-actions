@@ -68,7 +68,7 @@ jobs:
     - name: Deploy application
       run: |
         kubectl apply -f k8s/pre-ingress.yaml
-        kubectl apply -f k8s/hpa.yaml
+        
       env:
         KUBECONFIG: ${{ env.KUBECONFIG }}
 
