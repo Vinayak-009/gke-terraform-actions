@@ -21,15 +21,10 @@ variable "cluster_name" {
   default     = "gke-cluster"
 }
 
-
-
 variable "machine_type" {
   type        = string
   description = "Type of the node compute engines."
 }
-
-
-
 
 variable "min_count" {
   type        = number
@@ -50,6 +45,7 @@ variable "initial_node_count" {
   type        = number
   description = "The number of nodes to create in this cluster's default node pool."
 }
+
 variable "service_account" {
   description = "The service account email for the nodes"
   type        = string
