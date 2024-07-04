@@ -7,5 +7,4 @@ machine_type       = "e2-medium"
 min_count          = 1
 max_count          = 2
 disk_size_gb       = 10
-service_account    = "gke-terraform-actions@your_project_id.iam.gserviceaccount.com"
 initial_node_count = 2
